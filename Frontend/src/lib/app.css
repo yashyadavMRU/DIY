@@ -1,0 +1,30 @@
+:root {
+  --bg: #0b1220;
+  --surface: #101827;
+  --text: #e6eaf2;
+  --muted: #9aa4b2;
+  --primary: #2bb0ff;
+  --border: rgba(255,255,255,0.08);
+  --radius: 16px;
+}
+
+
+
+@font-face {
+    font-family: china;
+    src: url(./TWKLausanne-300.woff2);
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: gilroy;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+}

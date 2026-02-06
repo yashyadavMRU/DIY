@@ -1,0 +1,257 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User{
+  id        String @id @default(uuid())
+  name      String? 
+  email     String @unique
+  password  String
+  role  Role @default(USER)
+
+  address   Address[]
+  orders    Order[]
+  reviews   Review[]
+  build     Build[]
+  questions  Question[]
+  answers Answer[]
+  cart      Cart?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role{
+  USER
+  ADMIN
+}
+
+model Address{
+  id        String @id @default(uuid())
+  userId    String
+  fullname  String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  country   String
+  pincode   String
+  isDefault Boolean @default(false)
+
+  orders Order[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category{
+  id      String @id @default(uuid())
+  name    String
+  slug    String @unique
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  brand       String?
+  price       Decimal @db.Decimal(10, 2)
+  stock       Int
+  isBundle    Boolean  @default(false)
+
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  images      ProductImage[]
+  components  Component?
+  reviews     Review[]
+  cartItems    CartItem[]
+  orderItems    OrderItem[]
+  questions      Question[]
+
+  createdAt   DateTime @default(now())
+}
+
+model ProductImage{
+  id      String @id @default(uuid())
+  productId String
+  imageUrl String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Cart{
+  id      String @id @default(uuid())
+  userId  String @unique
+  items   CartItem[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CartItem{
+  id        String @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int  @default(1)
+
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Order{
+  id          String @id @default(uuid())
+  userId      String
+  addressId   String
+  totalAmount Decimal @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING)
+
+  items OrderItem[]
+  payment Payment?
+  shipment  Shipment?
+
+  user User @relation(fields: [userId], references: [id])
+  address Address @relation(fields: [addressId], references: [id])
+}
+
+enum OrderStatus{
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem{
+  id          String @id @default(uuid())
+  orderId     String
+  productId   String
+  price       Decimal @db.Decimal(10, 2)
+  quantity    Int
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Payment{
+  id        String @id @default(uuid())
+  orderId   String @unique
+  provider  String
+  status    String
+  reference   String?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Shipment{
+  id              String @id @default(uuid())
+  orderId         String @unique
+  courier         String
+  trackingNumber  String?
+  status          String
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model ComponentType{
+  id          String @id @default(cuid())
+  name        String @unique
+
+  components Component[]
+}
+
+model Component{
+  id                String @id @default(cuid())
+  productId         String @unique
+  componentTypeId   String
+  specs             Json
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  componentType ComponentType @relation(fields: [componentTypeId], references: [id])
+  buildItems BuildItem[]
+}
+
+model Build{
+  id                  String @id @default(cuid())
+  userId              String
+  name                String
+  totalWeight         Decimal? @db.Decimal(10, 3)
+  estimateFlightTime  Decimal? @db.Decimal(10, 3)
+  totalPrice          Decimal? @db.Decimal(10, 2)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items   BuildItem[]
+
+  createdAt DateTime @default(now())
+}
+
+model BuildItem{
+  id            String @id @default(cuid())
+  buildId       String
+  componentId   String
+
+  build Build @relation(fields: [buildId], references: [id], onDelete: Cascade)
+  component Component  @relation(fields: [componentId], references: [id])
+}
+
+model Review{
+  id          String @id @default(cuid())
+  userId      String
+  productId   String
+  rating      Int
+  comment     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Question{
+  id      String @id @default(cuid())
+  userId    String
+  productId   String
+  question String   @db.Text
+
+  answers Answer[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ product  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  @@index([productId])
+  @@index([userId])
+}
+
+model Answer{
+  id String @id @default(cuid())
+  userId String
+  questionId  String
+  answer String @db.Text
+
+  user User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([questionId])
+  @@index([userId])
+}
