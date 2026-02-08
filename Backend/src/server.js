@@ -4,6 +4,7 @@ import 'dotenv/config';
 import authRouter from "./routes/authRoutes.js";
 import cartRouter from "./routes/cartRoutes.js";
 import addressRoutes from "./routes/addressRoutes.js"
+import droneRoutes from "./routes/droneRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -15,6 +16,8 @@ app.use(express.urlencoded({extended: true}));
 app.use("/auth", authRouter);
 app.use("/cart", cartRouter);
 app.use("/address", addressRoutes);
+
+app.use("/shop", droneRoutes);
 
 const server = app.listen(PORT, () => {
     console.log(`Server is running at port: ${PORT}`);

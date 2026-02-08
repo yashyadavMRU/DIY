@@ -1,5 +1,7 @@
 import { writable, derived, get } from "svelte/store";
 import { PUBLIC_API_URL_AUTH, PUBLIC_API_URL_CART } from "$env/static/public";
+import { goto } from "$app/navigation";
+import { browser } from "$app/environment";
 
 // Current page store for routing
 export const currentPage = writable(null);
@@ -44,15 +46,21 @@ function createAuthStore(){
             });
 
             const result = await res.json();
-
+            
             if(!res.ok){
                 throw new Error(result.message || result.error || "Registration failed");
             }
 
-            const userData = {...result.data.user, token: result.token};
-            save(userData);
+            const userData = result?.user;
+            const token = result?.user?.token;
 
-            return userData;
+            if(userData && token){
+                localStorage.setItem("token", token);
+                save(userData);
+                return userData;
+            }else{
+                throw new Error("Server responded successfully but user data was missing.");
+            }
         },
 
         login: async(email, password) => {
@@ -62,24 +70,31 @@ function createAuthStore(){
                 body: JSON.stringify({ email, password}),
             });
 
-            const result = res.json();
+            const result = await res.json();
 
             if(!res.ok){
                 throw new Error(result.message || result.error || "Invalid email or password");
             }
 
             // saving thr user details in the localStorage
-            const userData = {...result.data.user, token: result.token};
-            save(userData);
+            const userData = result?.user || result?.data?.user;
+            const token = userData?.token || result?.token || result?.data?.token;
 
-            return userData;
+            if(userData && token){
+                localStorage.setItem("token", token);
+                save(userData);
+                return userData;
+            }else{
+                throw new Error("Server responded successfully but user data was missing.");
+            }
         },
 
         logout: () => {
             set(null);
-            if(isBrowser) localStorage.removeItem("user");
-
-            window.location.href = "/login";
+            if(isBrowser) {
+                localStorage.removeItem("user");
+                localStorage.removeItem("token");
+            }
         }
     };
 
@@ -105,8 +120,13 @@ function createCartStore() {
             if(currentUser){
 
                 try {
+
+                    const token = browser ? localStorage.getItem("token") : null;
                     const res = await fetch(`${PUBLIC_API_URL_CART}`, {
-                        headers: {"Authorization": `Bearer ${currentUser.token}`}
+                        headers: {
+                            "Content-Type": "application/json",
+                        ...(token ? {Authorization : `Bearer ${token}`} : {})
+                        }
                     });
 
                     if(res.ok){
