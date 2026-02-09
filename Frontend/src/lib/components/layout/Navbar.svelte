@@ -86,13 +86,14 @@
           on:click={toggleDropDown}
         >
           <span class="status-dot"></span>
-          <span>{$user.name.split(" ")[0]}</span>
+          <span>{$user?.name ? $user.name.split(" ")[0] : "Pilot"}</span>
           <i class="ri-arrow-down-s-line arrow" class:rotate={isDropDownOpen}
           ></i>
         </button>
 
         {#if isDropDownOpen}
-          <div class="overlay" on:click={() => (isDropDownOpen = false)}>
+          <div class="overlay" on:click={() => (isDropDownOpen = false)}></div>
+
             <div class="dropdown" transition:slide={{ duration: 200 }}>
               <button class="menu-item" on:click={() => handleNavigation("/profile")} aria-label="Profile button">
                 <i class="ri-user-settings-line"></i>
@@ -111,7 +112,6 @@
                 <span>Logout</span>
               </button>
             </div>
-          </div>
         {/if}
 
       {:else}
@@ -299,7 +299,7 @@
     background: rgba(30, 41, 59, 0.7); /* Slate-800 with transparency */
     color: #f8fafc;
     border: 1px solid #334155;
-    padding: 6px 16px;
+    padding: 6px 14px;
     border-radius: 50px;
     font-size: 14px;
     font-weight: 600;
@@ -324,6 +324,25 @@
     transform: translateY(1px);
   }
 
+  .user-menu-container{
+    position: relative;
+    display: inline-block;
+  }
+
+  /* The overlay */
+  .overlay{
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 200px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    z-index: 1000; /* Must be higher than overlay */
+    backdrop-filter: blur(10px);
+  }
+
   /* Online Status Indicator */
   .status-dot {
     width: 8px;
@@ -331,6 +350,55 @@
     background-color: #10b981; /* Emerald-500 */
     border-radius: 50%;
     position: relative;
+  }
+
+  .menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.2s;
+    text-align: left;
+  }
+
+  .menu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+  }
+
+  .menu-item i {
+    color: var(--accent);
+    font-size: 16px;
+  }
+
+  .menu-item.logout:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .menu-item.logout i {
+    color: #ef4444;
+  }
+
+  .divider {
+    height: 1px;
+    background: #1e293b;
+    margin: 6px 0;
+  }
+
+  .arrow {
+    transition: transform 0.3s ease;
+  }
+
+  .arrow.rotate {
+    transform: rotate(180deg);
   }
 
   /* The Pulsing Animation */

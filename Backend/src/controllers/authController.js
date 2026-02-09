@@ -79,6 +79,7 @@ const login = async (req, res) => {
         data: {
             user: {
                 id: userExist.id,
+                name: userExist.name,
                 email: email,
             },
             token,
